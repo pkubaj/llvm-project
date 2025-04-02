@@ -97,7 +97,6 @@ static void rewriteFuncWithReturnType(Function &OldF, Value *NewRetValue) {
   // result of our pruning here.
   EliminateUnreachableBlocks(OldF);
 
-
   // Drop the incompatible attributes before we copy over to the new function.
   if (OldRetTy != NewRetTy) {
     AttributeList AL = OldF.getAttributes();
@@ -105,6 +104,10 @@ static void rewriteFuncWithReturnType(Function &OldF, Value *NewRetValue) {
         AttributeFuncs::typeIncompatible(NewRetTy, AL.getRetAttrs());
     OldF.removeRetAttrs(IncompatibleAttrs);
   }
+
+  // Now we need to remove any returned attributes from parameters.
+  for (Argument &A : OldF.args())
+    OldF.removeParamAttr(A.getArgNo(), Attribute::Returned);
 
   Function *NewF =
       Function::Create(NewFuncTy, OldF.getLinkage(), OldF.getAddressSpace(), "",
